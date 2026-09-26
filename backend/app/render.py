@@ -11,7 +11,7 @@ from .schemas import AnalysisResult, Category, FocusTask
 CATEGORY_COLORS = {
     Category.trash_biohazard: (255, 99, 71),
     Category.recycling_paper: (65, 150, 255),
-    Category.donate_textiles: (180, 110, 255),
+    Category.usable_belongings: (180, 110, 255),
     Category.keep_sentimental: (255, 200, 60),
     Category.unsure: (160, 160, 160),
 }

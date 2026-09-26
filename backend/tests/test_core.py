@@ -37,8 +37,10 @@ def _scene():
     box = VlmBox(x1=0, y1=0, x2=100, y2=100)
     return SceneAnalysis(
         scene_summary="s", complexity=Complexity(score=2, too_complex=False, reason="r"),
-        zones=[Zone(id="z1", label="table", box=box, density=Density.medium, suggested_first=True),
-               Zone(id="z2", label="floor", box=box, density=Density.high, suggested_first=False)],
+        zones=[Zone(id="z1", label="table", box=box, density=Density.medium, suggested_first=True,
+                    accessible=True, blocked_by=[], blocks_path=False, hazards=[]),
+               Zone(id="z2", label="floor", box=box, density=Density.high, suggested_first=False,
+                    accessible=False, blocked_by=["z1"], blocks_path=True, hazards=["cords under items"])],
         items=[ItemGroup(id="i1", zone_id="z1", label="cans", detector_phrase="soda can",
                          category=Category.trash_biohazard, count_estimate=2, boxes=[box])],
         exclude_regions=[], zoom_suggestion=None, focus_item_ids=["i1"], first_step="go",
