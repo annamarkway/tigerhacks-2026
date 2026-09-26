@@ -1,0 +1,290 @@
+{
+  "_about": "Where each kind of usable belonging goes on a 'group' step. The goal is a home per kind of thing (a labeled box, a drawer, a hook, a room), so areas condense over time and anything found later has somewhere to go. Entries are matched in order against item labels, so put specific kinds before general ones (e.g. 'pet supplies' before 'dishes' so a dog bowl doesn't go to the sink). 'keywords' match whole words (plurals ending in s/es included; list irregular plurals like 'knives' separately). 'home' is the real place it lives. 'fallback' is a concrete stand-in for when that home doesn't exist yet: prefer a container they likely have (a shoebox, a sturdy box, a bin) over 'a pile'; a laundry basket is only for laundry, never dishes or toys. 'box_label' is what to write on the box with a marker; null when the home is a room, a hook, or a spot rather than a box. 'tip' is one small, practical way to put this kind of thing away; null when there's nothing useful to add. 'rooms' (optional) overrides any of these fields by the room the photo shows (living_room, bedroom, kitchen, dining_room, bathroom, office, entryway, laundry_room, garage, closet); the entry's own fields are for any other room or when the room isn't clear.",
+  "homes": [
+    {
+      "kind": "pillows and cushions",
+      "keywords": ["pillow", "throw pillow", "cushion", "pillowcase"],
+      "home": "back on the couch, chair, or bed they belong to",
+      "fallback": "stacked at one end of the couch or bed",
+      "box_label": null,
+      "tip": "Fluff each one and stand it up against the back; it takes seconds and makes the whole seat look reset.",
+      "rooms": {
+        "living_room": {"home": "back on the couch or chairs", "fallback": "stacked at one end of the couch"},
+        "bedroom": {"home": "back on the bed, or on the closet shelf", "fallback": "stacked at the head of the bed"}
+      }
+    },
+    {
+      "kind": "plastic and paper bags",
+      "keywords": ["plastic bag", "plastic grocery bag", "plastic shopping bag", "grocery bag", "paper bag", "shopping bag", "produce bag", "zip bag", "ziploc", "ziplock"],
+      "home": "stuffed inside one bag, kept under the kitchen sink",
+      "fallback": "all stuffed inside one bag, hung on a doorknob",
+      "box_label": null,
+      "tip": "Push them all into one bag loosely; no folding needed."
+    },
+    {
+      "kind": "keepsakes",
+      "keywords": ["photo", "photograph", "picture frame", "photo album", "scrapbook", "keepsake", "memento", "souvenir", "greeting card", "postcard", "love letter", "trophy", "trophies", "medal", "yearbook", "baby clothes", "heirloom"],
+      "home": "one box labeled 'Keepsakes', kept somewhere dry",
+      "fallback": "a shoebox or bag set aside just for keepsakes",
+      "box_label": "Keepsakes",
+      "tip": "No need to look through them today; just lay them in flat so nothing bends."
+    },
+    {
+      "kind": "gift wrap",
+      "keywords": ["wrapping paper", "gift wrap", "gift bag", "tissue paper", "ribbon", "gift box"],
+      "home": "one bag or bin labeled 'Gift wrap'",
+      "fallback": "one gift bag holding all the others",
+      "box_label": "Gift wrap",
+      "tip": "Stand rolls upright in the bin so they don't crush."
+    },
+    {
+      "kind": "holiday decorations",
+      "keywords": ["ornament", "wreath", "string lights", "christmas", "halloween", "holiday", "easter", "seasonal decoration", "costume"],
+      "home": "one bin labeled with the holiday, stored up high or in a closet",
+      "fallback": "a box or bag just for decorations",
+      "box_label": "Holiday",
+      "tip": "Wrap string lights loosely around your hand or a piece of cardboard so they don't tangle."
+    },
+    {
+      "kind": "pet supplies",
+      "keywords": ["pet food", "dog food", "cat food", "kibble", "leash", "collar", "harness", "pet bowl", "dog bowl", "cat bowl", "dog toy", "cat toy", "pet bed", "dog bed", "cat bed", "cat litter", "pet treat", "dog treat", "pet brush"],
+      "home": "one bin labeled 'Pet', near where the pet eats",
+      "fallback": "a grocery bag set by the pet's bowl",
+      "box_label": "Pet",
+      "tip": "Leashes can hang on a hook by the door so they're easy to grab."
+    },
+    {
+      "kind": "plants",
+      "keywords": ["plant", "houseplant", "succulent", "cactus", "planter", "flower pot", "plant pot"],
+      "home": "a windowsill or table with some light",
+      "fallback": "together on one tray or plate near a window",
+      "box_label": null,
+      "tip": "A plate or tray under each pot keeps water off the floor."
+    },
+    {
+      "kind": "cleaning supplies",
+      "keywords": ["cleaner", "cleaning", "spray bottle", "bleach", "detergent", "dish soap", "disinfectant", "sponge", "paper towel", "rag", "mop", "broom", "dustpan", "duster", "vacuum", "rubber glove", "scrub brush", "wipes"],
+      "home": "under the kitchen or bathroom sink",
+      "fallback": "one bucket or bag, standing upright",
+      "box_label": null,
+      "tip": "Keep sprays and bottles standing up with caps closed, away from food."
+    },
+    {
+      "kind": "everyday carry",
+      "keywords": ["key", "keychain", "key ring", "wallet", "sunglasses", "eyeglasses", "reading glasses", "glasses case", "lanyard", "badge", "id card", "coin", "loose change"],
+      "home": "one bowl or tray by the door",
+      "fallback": "a small cup or bowl by the door",
+      "box_label": null,
+      "tip": "One landing spot means you'll always know where to look."
+    },
+    {
+      "kind": "jewelry and accessories",
+      "keywords": ["jewelry", "jewellery", "necklace", "bracelet", "earring", "ring", "watch", "watches", "hair tie", "hair clip", "scrunchie", "headband", "belt", "necktie"],
+      "home": "a small dish, tray, or box on the dresser",
+      "fallback": "a mug or small bowl on the dresser",
+      "box_label": null,
+      "tip": "Clasp necklaces before setting them down so they don't knot."
+    },
+    {
+      "kind": "outerwear",
+      "keywords": ["coat", "jacket", "raincoat", "parka", "umbrella", "hat", "beanie", "baseball cap", "scarf", "scarves", "mitten", "glove"],
+      "home": "a hook or the coat closet by the door",
+      "fallback": "draped over one chair by the door",
+      "box_label": null,
+      "tip": "Hats, scarves, and gloves can share one basket on the closet floor.",
+      "rooms": {
+        "bedroom": {"home": "hung in the bedroom closet", "fallback": "draped over one chair or the end of the bed"}
+      }
+    },
+    {
+      "kind": "hangers",
+      "keywords": ["hanger", "coat hanger", "clothes hanger"],
+      "home": "hung together on the closet rod",
+      "fallback": "one stack on the closet floor",
+      "box_label": null,
+      "tip": "Hook them all facing the same way so they come off one at a time."
+    },
+    {
+      "kind": "cables",
+      "keywords": ["cable", "cord", "charger", "charging", "adapter", "power strip", "hdmi", "usb", "extension cord", "power cord", "aux"],
+      "home": "a drawer or box just for cables",
+      "fallback": "a shoebox or grocery bag just for cables",
+      "box_label": "Cables",
+      "tip": "Loosely loop each one and tuck the end through, or use a twist tie from the kitchen; no need to match them to devices today."
+    },
+    {
+      "kind": "batteries and bulbs",
+      "keywords": ["battery", "batteries", "light bulb", "lightbulb", "bulb", "fuse"],
+      "home": "one small box labeled 'Batteries & bulbs'",
+      "fallback": "a zip bag or small container",
+      "box_label": "Batteries & bulbs",
+      "tip": "Put a bit of tape over the ends of 9-volt batteries so they can't touch metal."
+    },
+    {
+      "kind": "electronics",
+      "keywords": ["headphone", "earbud", "controller", "remote", "mouse", "keyboard", "phone", "tablet", "laptop", "speaker", "camera", "console", "router", "hard drive", "flash drive"],
+      "home": "a shelf or box just for electronics",
+      "fallback": "a shoebox or bag for electronics, kept off the floor",
+      "box_label": "Electronics",
+      "tip": "Lay them in flat with screens facing each other, not stacked loose on top."
+    },
+    {
+      "kind": "dishes",
+      "keywords": ["dish", "plate", "cup", "mug", "bowl", "utensil", "silverware", "cutlery", "fork", "spoon", "knife", "knives", "pan", "pot", "tupperware", "food container", "water bottle", "tumbler", "thermos", "wine glass", "drinking glass", "glass", "baking sheet", "cutting board"],
+      "home": "the kitchen, next to the sink",
+      "fallback": "stacked on a tray or in a sturdy box by the doorway, ready to carry to the kitchen in one trip",
+      "box_label": null,
+      "tip": "Stack plates with plates and cups with cups; put knives in point-down or lay them flat on top."
+    },
+    {
+      "kind": "food",
+      "keywords": ["snack", "canned", "canned food", "cereal", "pasta", "rice", "sealed food", "groceries", "grocery", "spice", "sauce", "condiment", "chips", "crackers", "soup", "tea", "coffee", "oatmeal", "granola bar"],
+      "home": "the kitchen cupboard or pantry",
+      "fallback": "a grocery bag by the doorway, ready to carry to the kitchen",
+      "box_label": null,
+      "tip": "Sealed food only; anything opened or past its date can go in the trash bag instead."
+    },
+    {
+      "kind": "shoes",
+      "keywords": ["shoe", "sneaker", "boot", "sandal", "slipper", "high heel", "flip flop", "cleat"],
+      "home": "a shoe rack or one row by the door",
+      "fallback": "one row along the wall by the door, pairs side by side",
+      "box_label": null,
+      "tip": "Pair them up as you go; a single without its partner can wait at the end of the row.",
+      "rooms": {
+        "bedroom": {"home": "one row on the closet floor", "fallback": "one row along the wall by the closet, pairs side by side"}
+      }
+    },
+    {
+      "kind": "bins and boxes",
+      "keywords": ["bin", "storage bin", "plastic bin", "bucket", "box", "cardboard box", "storage box", "crate", "milk crate", "tote bin", "storage tote", "storage tub", "basket", "laundry basket", "hamper"],
+      "home": "along the edge of the room, against the wall and out of the walkway",
+      "fallback": "pushed against the nearest wall, stacked no more than waist high",
+      "box_label": null,
+      "tip": "Heaviest on the bottom, and keep doorways and the path through the room clear."
+    },
+    {
+      "kind": "laundry",
+      "keywords": ["clothes", "clothing", "garment", "shirt", "t-shirt", "tank top", "blouse", "pants", "jeans", "leggings", "sock", "hoodie", "sweater", "sweatshirt", "dress", "skirt", "shorts", "underwear", "bra", "pajamas", "towel", "washcloth", "laundry"],
+      "home": "the laundry basket or hamper",
+      "fallback": "a big bag or pillowcase used as a laundry bag for now",
+      "box_label": null,
+      "tip": "No need to sort clean from dirty today; it all goes in, and washing sorts it."
+    },
+    {
+      "kind": "bags",
+      "keywords": ["backpack", "purse", "tote", "tote bag", "handbag", "duffel", "duffel bag", "reusable bag", "suitcase", "luggage"],
+      "home": "a hook by the door, or nested inside one bag",
+      "fallback": "one bag holding the others",
+      "box_label": null,
+      "tip": "Empty pockets into a bowl first, then nest the bags; a suitcase can hold the rest."
+    },
+    {
+      "kind": "books",
+      "keywords": ["book", "textbook", "novel", "cookbook", "magazine", "comic", "notebook", "journal", "sketchbook"],
+      "home": "a bookshelf, or a box labeled 'Books'",
+      "fallback": "one neat stack against the wall, spines facing out",
+      "box_label": "Books",
+      "tip": "Spines facing out so you can read titles later without unstacking."
+    },
+    {
+      "kind": "papers",
+      "keywords": ["paper", "mail", "letter", "document", "receipt", "envelope", "bill", "folder", "form", "flyer", "brochure", "catalog", "coupon", "statement", "sheet of paper", "sheets of paper"],
+      "home": "one tray or box labeled 'Papers', to look through another day",
+      "fallback": "a shoebox or bag for papers, no reading needed today",
+      "box_label": "Papers",
+      "tip": "Just drop them in facing the same way; sorting is a separate step for another day."
+    },
+    {
+      "kind": "linens",
+      "keywords": ["blanket", "sheet", "bed sheet", "fitted sheet", "bedding", "throw", "quilt", "comforter", "duvet", "tablecloth"],
+      "home": "folded on the bed or in the linen closet",
+      "fallback": "folded in half and stacked at the foot of the bed",
+      "box_label": null,
+      "tip": "A rough fold in half, then half again, is plenty.",
+      "rooms": {
+        "living_room": {"home": "folded over the back or arm of the couch", "fallback": "folded and stacked at one end of the couch"},
+        "bedroom": {"home": "folded on the bed, or on the closet shelf", "fallback": "folded in half and stacked at the foot of the bed"}
+      }
+    },
+    {
+      "kind": "medicine",
+      "keywords": ["medicine", "medication", "pill", "vitamin", "prescription", "supplement", "first aid", "bandage", "band-aid", "ointment", "inhaler", "thermometer"],
+      "home": "one bin labeled 'Medicine', up high and out of reach of kids and pets",
+      "fallback": "a zip bag or container on a high shelf",
+      "box_label": "Medicine",
+      "tip": "Keep everything in its original bottle so the labels stay with it."
+    },
+    {
+      "kind": "toiletries",
+      "keywords": ["toothbrush", "toothpaste", "shampoo", "conditioner", "soap", "body wash", "lotion", "deodorant", "makeup", "cosmetic", "razor", "hairbrush", "comb", "toiletry", "toiletries", "skincare", "perfume", "cologne", "nail polish", "floss", "hair dryer", "straightener", "curling iron"],
+      "home": "the bathroom, or a bin labeled 'Bathroom'",
+      "fallback": "a basket or bag by the doorway, ready to carry to the bathroom",
+      "box_label": "Bathroom",
+      "tip": "Stand bottles upright with caps closed; hot tools go in only once they're cool."
+    },
+    {
+      "kind": "desk supplies",
+      "keywords": ["pen", "pencil", "marker", "highlighter", "crayon", "stapler", "staple", "scissors", "sticky note", "office supplies", "eraser", "ruler", "scotch tape", "paper clip", "calculator"],
+      "home": "a cup or small box on the desk",
+      "fallback": "a mug on the desk",
+      "box_label": "Desk supplies",
+      "tip": "Pens and pencils point-down in a cup; small bits like clips in a separate dish."
+    },
+    {
+      "kind": "tools",
+      "keywords": ["tool", "screwdriver", "hammer", "wrench", "pliers", "screw", "nail", "bolt", "drill", "tape measure", "duct tape", "flashlight", "zip tie"],
+      "home": "a box labeled 'Tools'",
+      "fallback": "a sturdy bag or bucket just for tools",
+      "box_label": "Tools",
+      "tip": "Loose screws and nails can go in a jar or zip bag inside the box."
+    },
+    {
+      "kind": "sports and exercise",
+      "keywords": ["ball", "basketball", "football", "soccer ball", "baseball", "tennis", "racket", "racquet", "bat", "helmet", "yoga mat", "dumbbell", "kettlebell", "resistance band", "skateboard", "roller skate", "golf", "frisbee", "jump rope", "water gun"],
+      "home": "one bin or corner for sports gear",
+      "fallback": "a box or bin in one corner",
+      "box_label": "Sports",
+      "tip": "Balls in the bin, long things like bats standing in a corner."
+    },
+    {
+      "kind": "crafts",
+      "keywords": ["yarn", "craft", "paint", "paintbrush", "fabric", "sewing", "thread", "needle", "glue", "canvas", "beads", "knitting", "crochet", "sticker", "glitter"],
+      "home": "a box labeled with the hobby, like 'Crafts'",
+      "fallback": "a tote or bag just for craft supplies",
+      "box_label": "Crafts",
+      "tip": "Close paint and glue lids first; small bits can go in a zip bag inside the box."
+    },
+    {
+      "kind": "games and movies",
+      "keywords": ["board game", "video game", "card game", "playing cards", "deck of cards", "dvd", "blu-ray", "cd", "vinyl", "vinyl record", "cassette"],
+      "home": "a shelf or box labeled 'Games & movies'",
+      "fallback": "one stack on a shelf or against the wall",
+      "box_label": "Games & movies",
+      "tip": "Loose discs back in any case for now, even if it's the wrong one."
+    },
+    {
+      "kind": "toys",
+      "keywords": ["toy", "lego", "puzzle", "stuffed animal", "plush", "teddy bear", "doll", "action figure", "blocks", "toy car"],
+      "home": "a bin or box labeled 'Toys'",
+      "fallback": "any box or bin just for toys",
+      "box_label": "Toys",
+      "tip": "Small pieces like Lego can go in a zip bag so they don't scatter."
+    },
+    {
+      "kind": "decor",
+      "keywords": ["candle", "vase", "figurine", "picture", "painting", "poster", "wall art", "mirror", "lamp", "clock", "decoration", "decor"],
+      "home": "a shelf or tabletop, or leaning against the wall",
+      "fallback": "together on one shelf or clear spot of table",
+      "box_label": null,
+      "tip": "Frames and mirrors lean face-in against the wall so the glass is protected."
+    }
+  ],
+  "default": {
+    "kind": "other",
+    "home": "a box labeled with what's inside",
+    "fallback": "a bag or box for now, with anything similar",
+    "box_label": null,
+    "tip": null
+  }
+}

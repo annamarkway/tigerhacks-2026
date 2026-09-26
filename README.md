@@ -1,3 +1,29 @@
+# Taskit
+
+A gentle decluttering coach, as a phone-first PWA. The front end lives in `public/` and is served by `server.js` (Express), which proxies `/backend/*` to the FastAPI coach below.
+
+## Run the app
+```sh
+# 1. Coach backend (see Setup below for first-time install)
+cd backend && uv run uvicorn app.main:app --port 8000
+
+# 2. Web app, in another terminal
+npm install && npm start            # http://localhost:3000; BACKEND_URL defaults to http://127.0.0.1:8000
+```
+On a phone, open the Network URL that `npm start` prints. Over plain `http` on the LAN, "Take a photo" opens the phone's own camera app. The live in-app camera and "Add to Home Screen" install need HTTPS, e.g. `cloudflared tunnel --url http://localhost:3000` or `ngrok http 3000`.
+
+| File | Role |
+|---|---|
+| `public/index.html` | All screens: welcome, analyzing, session, done, plus the camera sheet |
+| `public/js/app.js` | Flow controller: turns each `SessionView` into chat, task cards, outlines and quick replies |
+| `public/js/session-ui.js` | Session UI controller (`window.TaskitSession`) |
+| `public/js/camera.js` | Live camera (`getUserMedia`) with native picker fallback |
+| `public/js/api.js` | Backend client (`/backend/sessions…`) |
+| `public/css/taskit.css`, `app.css` | Design tokens/components, and the app shell (safe areas, camera, typing) |
+| `public/sw.js`, `manifest.json` | PWA: network-first app shell; coach calls are never cached |
+
+The Memory Vault app is still available at `/vault/`.
+
 # Declutter vision backend
 
 Image analysis for step-by-step decluttering help. One photo goes in. Out come zones, item groups with triage categories, pixel polygons, a "too complex, zoom in" flag, and one recommended first target.
@@ -51,3 +77,6 @@ API:
 - `POST /sessions/{id}/messages` takes `{"text": "...", "action": "done"|"skip"|null}`. Buttons send `action`; free text goes to the coach.
 - `POST /sessions/{id}/photo` takes a closer or new photo and continues the same session.
 - `GET /sessions/{id}/steps/{step_id}/focus.jpg[?style=box]` returns the highlighted step image.
+- `DELETE /sessions/{id}` forgets the session and its photos right away (the app calls it when the person finishes or leaves).
+
+`current_step` also carries `photo_index`, `image_size`, `zone_label` and `smaller`, so a client can draw outlines on its own copy of the photo.

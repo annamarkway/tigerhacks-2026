@@ -3,18 +3,20 @@ photos in memory until it expires (1 hour idle)."""
 
 from __future__ import annotations
 
+import asyncio
 import io
 import json
+import threading
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 
 from pydantic import BaseModel
 
 from . import orchestrator
-from .pipeline import Options, analyze, focus_from_result, load_image
+from .pipeline import Cancelled, Options, analyze, focus_from_result, load_image
 from .render import blur_excluded, render_focus, render_focus_tight
 from .schemas import AnalysisResult, Intent, SessionView, StepAction
 from .session import Session
@@ -93,9 +95,29 @@ async def _run(fn, *args):
         raise HTTPException(503, str(e)) from e
 
 
+async def _run_cancellable(request: Request, fn, *args):
+    """Like _run, but when the client disconnects (the person hit Cancel or closed the app), the
+    work stops at its next stage instead of running every model call to the end. A worker thread
+    can't be killed, so fn gets a `cancel` Event to check."""
+    cancel = threading.Event()
+
+    async def watch():
+        while not await request.is_disconnected():
+            await asyncio.sleep(0.5)
+        cancel.set()
+
+    watcher = asyncio.create_task(watch())
+    try:
+        return await _run(lambda: fn(*args, cancel=cancel))
+    except Cancelled:
+        raise HTTPException(499, "Cancelled.") from None  # client closed request; nobody reads this
+    finally:
+        watcher.cancel()
+
+
 @app.post("/sessions", response_model=SessionView)
-async def create_session(image: UploadFile = File(...)):
-    return await _run(orchestrator.start_session, await _read_image(image))
+async def create_session(request: Request, image: UploadFile = File(...)):
+    return await _run_cancellable(request, orchestrator.start_session, await _read_image(image))
 
 
 @app.post("/sessions/{session_id}/messages", response_model=SessionView)
@@ -106,9 +128,16 @@ async def post_message(session_id: str, body: MessageIn):
 
 
 @app.post("/sessions/{session_id}/photo", response_model=SessionView)
-async def post_photo(session_id: str, image: UploadFile = File(...)):
+async def post_photo(request: Request, session_id: str, image: UploadFile = File(...)):
     session = _session(session_id)
-    return await _run(orchestrator.add_photo, session, await _read_image(image))
+    return await _run_cancellable(request, orchestrator.add_photo, session, await _read_image(image))
+
+
+@app.delete("/sessions/{session_id}", status_code=204)
+def end_session(session_id: str):
+    """Forget the session and its photos now instead of waiting for the idle timeout."""
+    orchestrator.store.delete(session_id)
+    return Response(status_code=204)
 
 
 @app.get("/sessions/{session_id}/steps/{step_id}/focus.jpg")

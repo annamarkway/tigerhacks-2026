@@ -1,87 +1,74 @@
-const CACHE_NAME = 'memory-vault-v1';
+const CACHE_NAME = 'taskit-v4';
 
-// Shell files to cache for offline use (app shell)
+// App shell cached for offline start and fast launches from the home screen.
 const SHELL_FILES = [
   '/',
   '/index.html',
-  '/styles.css',
-  '/app.js',
+  '/css/taskit.css',
+  '/css/app.css',
+  '/js/session-ui.js',
+  '/js/camera.js',
+  '/js/api.js',
+  '/js/app.js',
   '/manifest.json',
   '/icons/icon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
 ];
 
 // ── Install: pre-cache the app shell ──
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('[SW] Caching app shell');
-      return cache.addAll(SHELL_FILES);
-    })
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(SHELL_FILES)));
   self.skipWaiting();
 });
 
-// ── Activate: clean up old caches ──
+// ── Activate: clean up old caches (including the old Memory Vault shell) ──
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
     )
   );
   self.clients.claim();
 });
 
-// ── Fetch: network-first for API, cache-first for app shell ──
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
+  const { request } = event;
+  const url = new URL(request.url);
 
-  // API calls & uploads: always go to network (don't cache)
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/')) {
+  // Uploads, coach calls and other non-GET requests always go straight to the network.
+  if (request.method !== 'GET') return;
+  if (url.origin === self.location.origin &&
+      (url.pathname.startsWith('/backend/') || url.pathname.startsWith('/api/') || url.pathname.startsWith('/uploads/'))) {
+    return;
+  }
+
+  // Google Fonts: cache-first (they never change for a given URL).
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(
-      fetch(event.request).catch(() =>
-        new Response(JSON.stringify({ error: 'Offline' }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
+      caches.match(request).then(cached => cached || fetch(request).then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        return response;
+      }))
     );
     return;
   }
 
-  // Google Fonts: cache-first with network fallback
-  if (url.hostname.includes('fonts.googleapis.com') || url.hostname.includes('fonts.gstatic.com')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        });
-      })
-    );
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
-  // App shell: cache-first, update cache in background
+  // App shell: network-first so updates show up right away, cache when offline.
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const networkFetch = fetch(event.request)
-        .then(response => {
-          // Update cache with fresh version
+    fetch(request)
+      .then(response => {
+        if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => cached);
-
-      return cached || networkFetch;
-    })
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request).then(cached =>
+        cached || (request.mode === 'navigate' ? caches.match('/index.html') : Response.error())))
   );
 });

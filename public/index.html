@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Taskit</title>
+  <meta name="description" content="A gentle coach that helps you care for your space, one small task at a time.">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#F5F0E8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1B18" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Taskit">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+  <link rel="stylesheet" href="/css/taskit.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+  <!-- =====================================================================
+       Welcome
+       ===================================================================== -->
+  <main class="tk-screen tk-welcome" data-view="welcome">
+    <header class="tk-screen__head">
+      <span class="tk-brand">Taskit</span>
+      <span class="tk-note">
+        <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        Private
+      </span>
+    </header>
+
+    <div class="tk-hero" aria-hidden="true">
+      <svg viewBox="0 0 342 220" preserveAspectRatio="xMidYMid slice">
+        <circle style="fill:var(--tk-honey)" cx="248" cy="70" r="34"/>
+        <path style="fill:var(--tk-primary-soft)" d="M0 170 C 70 130, 130 150, 190 128 S 300 110, 342 124 L342 220 L0 220 Z"/>
+        <path style="fill:var(--tk-primary-line)" d="M0 190 C 80 168, 160 184, 230 170 S 320 160, 342 166 L342 220 L0 220 Z" opacity=".6"/>
+        <g style="fill:var(--tk-surface);stroke:var(--tk-ink)" transform="translate(125 96)" stroke-width="2.2">
+          <rect x="0" y="0" width="92" height="72" rx="12"/>
+          <rect x="30" y="-9" width="32" height="12" rx="4"/>
+          <circle cx="46" cy="38" r="17" fill="none"/>
+          <circle style="fill:var(--tk-primary)" cx="46" cy="38" r="6" stroke="none"/>
+        </g>
+      </svg>
+    </div>
+
+    <h1 class="tk-title">One small step, then another.</h1>
+    <p class="tk-lede">Taskit is a gentle coach that helps you care for your space, one small task at a time.</p>
+
+    <ul class="tk-promises">
+      <li>
+        <span class="tk-promises__icon"><svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></svg></span>
+        About 15 minutes. Shorter is fine too.
+      </li>
+      <li>
+        <span class="tk-promises__icon"><svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c-4-3-8-6.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 4.5-4 8-8 11z"/></svg></span>
+        Stop whenever you like. Stopping counts.
+      </li>
+      <li>
+        <span class="tk-promises__icon"><svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        Your photo is private and never saved.
+      </li>
+    </ul>
+
+    <div class="tk-screen__foot">
+      <button type="button" class="tk-btn tk-btn--primary tk-btn--block" data-tk="take-photo">
+        <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Take a photo of your space
+      </button>
+      <button type="button" class="tk-btn tk-btn--secondary tk-btn--block" data-tk="choose-photo">
+        <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>
+        Choose from library
+      </button>
+      <p class="tk-note">One photo of one area is plenty.</p>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       Analyzing
+       ===================================================================== -->
+  <main class="tk-screen" data-view="analyzing" hidden>
+    <header class="tk-screen__head">
+      <span class="tk-brand">Taskit</span>
+      <button type="button" class="tk-link-quiet tk-link-quiet--btn" data-tk="an-cancel">Cancel</button>
+    </header>
+
+    <div class="tk-analyzing__center">
+      <div class="tk-breathe" aria-hidden="true">
+        <span class="tk-breathe__ring tk-breathe__ring--1"></span>
+        <span class="tk-breathe__ring tk-breathe__ring--2"></span>
+        <div class="tk-breathe__photo">
+          <img data-tk="an-photo" alt="">
+        </div>
+      </div>
+      <div class="tk-analyzing__copy">
+        <h1 class="tk-title tk-analyzing__title" data-tk="an-headline">Taking a look…</h1>
+        <p class="tk-rotating" data-tk="an-line" aria-live="polite">There’s no rush. Take a slow breath while you wait.</p>
+      </div>
+    </div>
+
+    <div class="tk-screen__foot">
+      <button type="button" class="tk-btn tk-btn--primary tk-btn--block" data-tk="an-ready" hidden>Show me the first step</button>
+      <button type="button" class="tk-btn tk-btn--primary tk-btn--block" data-tk="an-retry" hidden>Try again</button>
+      <button type="button" class="tk-btn tk-btn--secondary tk-btn--block" data-tk="an-other" hidden>Choose a different photo</button>
+      <p class="tk-note" data-tk="an-wait">This usually takes under a minute.</p>
+      <p class="tk-note">
+        <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        Your photo is private and never saved.
+      </p>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       Session
+       ===================================================================== -->
+  <div class="tk-session" data-view="session" hidden>
+    <header class="tk-topbar">
+      <span class="tk-brand">Taskit</span>
+
+      <div class="tk-progress" aria-label="Session progress">
+        <div class="tk-progress__steps">
+          <div class="tk-progress__dots" data-tk="progress-dots"></div>
+          <span data-tk="progress-label">Your first step</span>
+        </div>
+        <span class="tk-progress__divider" aria-hidden="true"></span>
+        <div class="tk-progress__time">
+          <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></svg>
+          <span data-tk="time-label">Just getting started</span>
+          <span class="tk-progress__track" aria-hidden="true"><span class="tk-progress__fill" data-tk="time-fill"></span></span>
+          <span class="tk-progress__of">~15 min session</span>
+        </div>
+      </div>
+
+      <button type="button" class="tk-btn tk-btn--ghost tk-topbar__end" data-tk="pause" aria-label="Pause — I'm done for today">
+        <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+        <span class="tk-btn__long">Pause · I’m done for today</span>
+        <span class="tk-btn__short">I’m done for today</span>
+      </button>
+    </header>
+
+    <div class="tk-session__body">
+      <section class="tk-photo-panel" data-tk="photo-panel" aria-label="Your photo">
+        <div class="tk-photo-frame">
+          <div class="tk-photo" data-tk="photo" data-mode="focus">
+            <div class="tk-photo__stage" data-tk="photo-stage">
+              <img class="tk-photo__img tk-photo__img--soft" data-tk="photo-soft" alt="">
+              <div class="tk-photo__veil"></div>
+              <img class="tk-photo__img tk-photo__img--crisp" data-tk="photo-crisp" alt="Your photo, with this step’s items outlined">
+              <div data-tk="photo-outlines"></div>
+              <div data-tk="photo-corners">
+                <span class="tk-photo__corner tk-photo__corner--tl"></span>
+                <span class="tk-photo__corner tk-photo__corner--tr"></span>
+                <span class="tk-photo__corner tk-photo__corner--bl"></span>
+                <span class="tk-photo__corner tk-photo__corner--br"></span>
+              </div>
+            </div>
+
+            <span class="tk-photo__tag" data-tk="photo-tag" hidden>
+              <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              Your closer photo
+            </span>
+
+            <button type="button" class="tk-photo__overlay-btn tk-photo__hide" data-tk="photo-hide">
+              <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+              Hide
+            </button>
+            <button type="button" class="tk-photo__overlay-btn tk-photo__zoom" data-tk="photo-zoom" aria-label="Zoom in on this step" aria-pressed="false">
+              <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5M8.5 11h5"/><path data-tk="zoom-plus" d="M11 8.5v5"/></svg>
+            </button>
+
+            <button type="button" class="tk-photo__overlay-btn tk-photo__full" data-tk="photo-full" aria-label="Show photo full screen" aria-pressed="false">
+              <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-tk="full-icon" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+            </button>
+
+            <div class="tk-photo__pill" data-tk="photo-pill">
+              <b data-tk="photo-pill-lead">This step</b>
+              <span data-tk="photo-pill-text"></span>
+            </div>
+
+            <button type="button" class="tk-btn tk-btn--primary tk-photo__closer" data-tk="photo-closer">
+              <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              Take a closer photo
+            </button>
+          </div>
+        </div>
+
+        <p class="tk-note tk-photo-panel__note">
+          <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          Your photo is private and never saved.
+        </p>
+
+        <!-- Phone only: compact strip when the photo is hidden -->
+        <div class="tk-photo-strip">
+          <img class="tk-photo-strip__thumb" data-tk="strip-thumb" alt="">
+          <div class="tk-photo-strip__text">
+            <span class="tk-eyebrow">This step</span>
+            <span data-tk="strip-title"></span>
+          </div>
+          <button type="button" class="tk-btn tk-btn--soft" data-tk="photo-show">
+            <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            Show
+          </button>
+        </div>
+      </section>
+
+      <section class="tk-chat" aria-label="Chat with your coach">
+        <div class="tk-chat__head">
+          <div class="tk-coach">
+            <span class="tk-coach__avatar">
+              <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8M12 13c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg>
+            </span>
+            <div>
+              <div class="tk-coach__name">Your coach</div>
+              <div class="tk-coach__sub">One small step at a time</div>
+            </div>
+          </div>
+
+          <span class="tk-chip tk-chip--gear" data-tk="gear" title="Suggested for this space" hidden>
+            <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21v-5.5L5.2 12a1.6 1.6 0 0 1 2.5-2l1.3 1.4V5.5a1.5 1.5 0 0 1 3 0V10V4.5a1.5 1.5 0 0 1 3 0V10V6a1.5 1.5 0 0 1 3 0v8.5c0 3.6-2.2 6.5-5.5 6.5z"/></svg>
+            <span data-tk="gear-label"></span>
+          </span>
+
+          <div class="tk-chat__progress-compact" aria-hidden="true">
+            <span class="tk-check" style="width:22px;height:22px">
+              <svg class="tk-icon tk-icon--sm" style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            </span>
+            <b data-tk="progress-short">First step</b>
+            <span>·</span>
+            <span data-tk="time-short">just started</span>
+            <span class="tk-progress__track"><span class="tk-progress__fill" data-tk="time-fill-short"></span></span>
+          </div>
+        </div>
+
+        <div class="tk-log" data-tk="log" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+        <div class="tk-composer">
+          <div class="tk-quick" data-tk="quick" aria-label="Quick replies"></div>
+          <form class="tk-form" data-tk="form" autocomplete="off">
+            <label class="tk-sr-only" for="tk-input">Message your coach</label>
+            <input class="tk-input" id="tk-input" data-tk="input" type="text" enterkeyhint="send" placeholder="Type anything…">
+            <button type="submit" class="tk-btn tk-btn--soft tk-btn--icon" aria-label="Send">
+              <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       Done / paused
+       ===================================================================== -->
+  <main class="tk-screen tk-done" data-view="done" hidden>
+    <header class="tk-screen__head"><span class="tk-brand">Taskit</span></header>
+
+    <svg class="tk-done__art" width="168" height="140" viewBox="0 0 168 140" aria-hidden="true">
+      <circle style="fill:var(--tk-honey-soft)" cx="84" cy="70" r="64"/>
+      <circle style="fill:var(--tk-honey)" cx="84" cy="70" r="44"/>
+      <path style="stroke:var(--tk-primary)" d="M84 118 V74" stroke-width="4" stroke-linecap="round"/>
+      <path style="fill:var(--tk-primary)" d="M84 80 C84 62 98 52 118 52 C118 70 104 80 84 80 Z"/>
+      <path style="fill:var(--tk-time-fill)" d="M84 90 C84 76 72 66 54 66 C54 80 66 90 84 90 Z"/>
+      <path style="stroke:var(--tk-primary)" d="M52 118 H116" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+
+    <h1 class="tk-title" data-tk="done-headline">You did something good today.</h1>
+    <p class="tk-lede" data-tk="done-body"></p>
+
+    <section class="tk-card tk-done__card" data-tk="done-card" aria-labelledby="tk-did-h">
+      <h2 class="tk-eyebrow" id="tk-did-h">What you did today</h2>
+      <ul class="tk-did" data-tk="done-did"></ul>
+    </section>
+
+    <div class="tk-screen__foot">
+      <button type="button" class="tk-btn tk-btn--primary tk-btn--block" data-tk="done-rest">Rest for today</button>
+      <button type="button" class="tk-btn tk-btn--secondary tk-btn--block" data-tk="done-restart">
+        <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Start again another day
+      </button>
+      <p class="tk-note">
+        <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        Your photos from today have been cleared.
+      </p>
+    </div>
+  </main>
+
+  <!-- =====================================================================
+       Camera sheet (live camera via getUserMedia; native picker as fallback)
+       ===================================================================== -->
+  <div class="tk-camera" data-cam="root" role="dialog" aria-modal="true" aria-labelledby="tk-cam-title" hidden>
+    <div class="tk-camera__top">
+      <button type="button" class="tk-camera__round" data-cam="close" aria-label="Close camera">
+        <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <span class="tk-camera__title" id="tk-cam-title" data-cam="title">Take a photo</span>
+      <span class="tk-camera__spacer" aria-hidden="true"></span>
+    </div>
+
+    <div class="tk-camera__view">
+      <video data-cam="video" autoplay playsinline muted></video>
+      <img data-cam="still" alt="The photo you just took" hidden>
+      <div class="tk-camera__msg" data-cam="msg" hidden>
+        <p data-cam="msg-text"></p>
+        <button type="button" class="tk-btn tk-btn--primary" data-cam="msg-pick">Choose a photo instead</button>
+      </div>
+    </div>
+
+    <p class="tk-camera__hint" data-cam="hint">One area at a time is plenty.</p>
+
+    <div class="tk-camera__controls" data-cam="live-controls">
+      <button type="button" class="tk-camera__side" data-cam="library">
+        <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/></svg>
+        Library
+      </button>
+      <button type="button" class="tk-camera__shutter" data-cam="shutter" aria-label="Take photo"></button>
+      <span class="tk-camera__side" aria-hidden="true"></span>
+    </div>
+    <div class="tk-camera__controls tk-camera__controls--review" data-cam="review-controls" hidden>
+      <button type="button" class="tk-btn tk-btn--secondary" data-cam="retake">Retake</button>
+      <button type="button" class="tk-btn tk-btn--primary" data-cam="use">
+        <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        Use this photo
+      </button>
+    </div>
+  </div>
+
+  <!-- Native pickers: capture opens the phone camera app, the other opens the library -->
+  <input type="file" accept="image/*" capture="environment" data-cam="native-capture" hidden>
+  <input type="file" accept="image/*" data-cam="native-pick" hidden>
+
+  <!-- ===== Templates the session controller clones ===== -->
+  <template id="tk-tpl-task">
+    <article class="tk-task">
+      <div class="tk-task__label tk-eyebrow">
+        <svg class="tk-icon tk-icon--sm" data-icon="focus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V6a2 2 0 0 1 2-2h3M15 4h3a2 2 0 0 1 2 2v3M20 15v3a2 2 0 0 1-2 2h-3M9 20H6a2 2 0 0 1-2-2v-3"/><circle cx="12" cy="12" r="2.5"/></svg>
+        <svg class="tk-icon tk-icon--sm" data-icon="camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        <span data-slot="label">This step</span>
+      </div>
+      <h3 class="tk-task__title" data-slot="title"></h3>
+      <p data-slot="body"></p>
+    </article>
+  </template>
+
+  <template id="tk-tpl-celebrate">
+    <div class="tk-celebrate">
+      <svg class="tk-icon tk-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8M12 13c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/></svg>
+      <span data-slot="text"></span>
+    </div>
+  </template>
+
+  <template id="tk-tpl-support">
+    <aside class="tk-support" aria-label="Support resources">
+      <div>
+        <h3 class="tk-support__title">Someone to talk to, any time</h3>
+        <p class="tk-support__text">Free and confidential, day or night. You can reach out even if it doesn’t feel like an emergency.</p>
+      </div>
+      <div class="tk-support__links">
+        <a class="tk-support__link" href="tel:988">
+          <span class="tk-support__icon"><svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span>
+          <span class="tk-support__main"><b>Call 988</b><span>988 Suicide &amp; Crisis Lifeline (US)</span></span>
+          <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+        <a class="tk-support__link" href="sms:988">
+          <span class="tk-support__icon"><svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span>
+          <span class="tk-support__main"><b>Text 988</b><span>If talking out loud feels like too much</span></span>
+          <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+        <a class="tk-support__link" href="https://988lifeline.org/chat/" target="_blank" rel="noopener">
+          <span class="tk-support__icon"><svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+          <span class="tk-support__main"><b>Chat online</b><span>988lifeline.org</span></span>
+          <svg class="tk-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+      <p class="tk-support__foot">Outside the US? <a href="https://findahelpline.com" target="_blank" rel="noopener">Find a helpline near you</a>. If you’re in danger right now, call your local emergency number.</p>
+    </aside>
+  </template>
+
+  <script src="/js/session-ui.js"></script>
+  <script src="/js/camera.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -8,8 +8,11 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 
+from .gear import practical_gear
+from .homes import home_for
 from .llm import SceneAnalysisError, VLMUnavailableError, claude_parse
 from .prompts import load
 from .schemas import (
@@ -28,16 +31,53 @@ DECISION_CATEGORIES = {Category.keep_sentimental, Category.unsure}
 ACTION_FOR_CATEGORY = {
     Category.trash_biohazard: StepAction.bag,
     Category.recycling_paper: StepAction.recycle,
-    Category.usable_belongings: StepAction.sort,
+    Category.usable_belongings: StepAction.group,
 }
-# Usable belongings are the person's decision: never planned straight into a trash bag or recycling.
-USABLE_ACTIONS = {StepAction.sort, StepAction.set_aside}
+# Usable belongings get a home: never planned straight into a trash bag or recycling.
+USABLE_ACTIONS = {StepAction.group, StepAction.set_aside}
+
+# Minutes = setup + per piece. Dropping a small piece into a bag takes seconds; carrying
+# things to their home (or finding and labeling a box for them) takes longer.
+PACE = {
+    StepAction.bag: (0.5, 0.2),
+    StepAction.recycle: (0.5, 0.2),
+    StepAction.group: (1.0, 0.4),
+    StepAction.set_aside: (1.0, 0.2),
+}
+MAX_STEP_MINUTES = 5
+
+
+def estimate_minutes(action: StepAction, pieces: int) -> int:
+    if action == StepAction.take_closer_photo:
+        return 1
+    setup, per_piece = PACE[action]
+    return max(1, min(MAX_STEP_MINUTES, math.floor(setup + per_piece * pieces + 0.5)))
+
+
+def count_pieces(item_ids: list[str], items: dict[str, ItemResult]) -> int:
+    return sum(max(1, len(items[i].instances)) for i in item_ids if i in items)
+
+
+def has_home(item: ItemResult) -> bool:
+    """Usable, or unsure but obviously an everyday thing with a home (cables, a water bottle)."""
+    return item.category == Category.usable_belongings or (
+        item.category == Category.unsure and home_for(item.label).kind != "other"
+    )
+
+
+def allowed_in(action: StepAction, item: ItemResult) -> bool:
+    """Decision items (sentimental, unsure) only go in set_aside, or in group when they have a clear home."""
+    if item.category not in DECISION_CATEGORIES:
+        return True
+    return action == StepAction.set_aside or (action == StepAction.group and has_home(item))
 
 
 def describe_scene(result: AnalysisResult, assessment: Assessment | None) -> str:
     """Compact JSON the triage model reads; no pixel data beyond what it needs."""
     doc = {
         "scene_summary": result.scene_summary,
+        "room": result.room.value,
+        "furniture": result.furniture,
         "too_complex": result.complexity.too_complex,
         "zoom_suggestion": result.zoom_suggestion.model_dump() if result.zoom_suggestion else None,
         "zones": [
@@ -46,9 +86,11 @@ def describe_scene(result: AnalysisResult, assessment: Assessment | None) -> str
         ],
         "items": [
             {"id": i.id, "zone_id": i.zone_id, "label": i.label, "category": i.category.value, "count": len(i.instances)}
+            | ({"home": home_for(i.label, result.room).kind} if has_home(i) else {})
             for i in result.items
         ],
-        "assessment": assessment.model_dump(include={"assigned_level", "severity", "primary_justifications", "required_ppe"})
+        "assessment": assessment.model_dump(include={"assigned_level", "severity", "primary_justifications"})
+        | {"gear": practical_gear(assessment, [h for z in result.zones for h in z.hazards])}
         if assessment
         else None,
     }
@@ -88,8 +130,7 @@ def validate_plan(plan: TriagePlan | None, result: AnalysisResult) -> list[Triag
             continue
         ids = [
             i for i in dict.fromkeys(s.item_ids)
-            if i in items and i not in used
-            and (items[i].category not in DECISION_CATEGORIES or s.action == StepAction.set_aside)
+            if i in items and i not in used and allowed_in(s.action, items[i])
         ]
         action, ids = fit_action(s.action, ids, items)
         ids = ids[:4]
@@ -98,14 +139,21 @@ def validate_plan(plan: TriagePlan | None, result: AnalysisResult) -> list[Triag
         used.update(ids)
         zone_id = s.zone_id if s.zone_id in zone_ids else items[ids[0]].zone_id
         steps.append(s.model_copy(update={
-            "item_ids": ids, "action": action, "zone_id": zone_id, "est_minutes": max(1, min(10, s.est_minutes)),
+            "item_ids": ids, "action": action, "zone_id": zone_id,
+            "est_minutes": estimate_minutes(action, count_pieces(ids, items)),
         }))
 
-    # Unique ids (the model sometimes repeats "s1").
+    # Unique ids: the model sometimes repeats "s1", and a session looks steps up by id, so a
+    # repeat would bring back an earlier step's items. A repeat gets an id no step uses.
+    taken = {s.id for s in steps}
     seen: set[str] = set()
     for n, s in enumerate(steps):
         if s.id in seen:
-            s.id = f"s{n + 1}"
+            k = n + 1
+            while f"s{k}" in taken:
+                k += 1
+            steps[n] = s = s.model_copy(update={"id": f"s{k}"})
+            taken.add(s.id)
         seen.add(s.id)
 
     if not steps:
@@ -114,12 +162,12 @@ def validate_plan(plan: TriagePlan | None, result: AnalysisResult) -> list[Triag
 
 
 def fit_action(action: StepAction, ids: list[str], items: dict[str, ItemResult]) -> tuple[StepAction, list[str]]:
-    """Keep usable belongings out of bag/recycle steps: all-usable becomes sort, mixed drops the usable ones."""
+    """Keep usable belongings out of bag/recycle steps: all-usable becomes group, mixed drops the usable ones."""
     if action in USABLE_ACTIONS:
         return action, ids
     usable = [i for i in ids if items[i].category == Category.usable_belongings]
     if usable and len(usable) == len(ids):
-        return StepAction.sort, ids
+        return StepAction.group, ids
     return action, [i for i in ids if i not in usable]
 
 
@@ -157,7 +205,7 @@ def fallback_steps(result: AnalysisResult) -> list[TriageStep]:
                 item_ids=ids,
                 zone_id=result.focus.zone_id or first.zone_id,
                 action=action,
-                est_minutes=5,
+                est_minutes=estimate_minutes(action, count_pieces(ids, items)),
                 priority_reason="fallback: vision first step",
             )
         ]
