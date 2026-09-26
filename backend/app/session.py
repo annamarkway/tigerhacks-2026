@@ -14,12 +14,15 @@ from dataclasses import dataclass, field
 
 from PIL import Image
 
+from .gear import practical_gear
+from .homes import home_for
 from .pipeline import choose_focus
 from .schemas import (
     AnalysisResult,
     Assessment,
     AssessmentSummary,
     FocusTask,
+    ItemHomeView,
     Intent,
     ItemResult,
     SessionStatus,
@@ -29,7 +32,7 @@ from .schemas import (
     StepView,
     TriageStep,
 )
-from .triage import dependencies
+from .triage import dependencies, estimate_minutes
 
 BUDGET_MIN = 15
 WRAP_UP_MIN = 12
@@ -147,6 +150,15 @@ class Session:
     # --- time -------------------------------------------------------------
 
     @property
+    def hazards(self) -> list[str]:
+        """Every visible hazard in the session's photos."""
+        return [h for photo in self.photos for z in photo.analysis.zones for h in z.hazards]
+
+    @property
+    def gear(self) -> list[str]:
+        return practical_gear(self.assessment, self.hazards)
+
+    @property
     def elapsed_min(self) -> float:
         return (time.time() - self.started_at) / 60
 
@@ -165,6 +177,20 @@ class Session:
             items = [first.model_copy(update={"instances": first.instances[:SMALLER_MAX_INSTANCES]})]
         return items
 
+    def step_homes(self, p: PlannedStep) -> list[ItemHomeView]:
+        if p.step.action != StepAction.group:
+            return []
+        room = self.photos[p.photo_idx].analysis.room
+        return [
+            ItemHomeView(item_id=i.id, label=i.label, **home_for(i.label, room).model_dump())
+            for i in self.step_items(p)
+        ]
+
+    def homes_set_up(self) -> list[str]:
+        """Homes finished earlier this session, so the coach can say 'into the cable box you started'."""
+        homes = [h for p in self.steps if p.status == StepStatus.done for h in self.step_homes(p)]
+        return list(dict.fromkeys(f"{h.box_label} box" if h.box_label else h.home for h in homes))
+
     def step_focus(self, p: PlannedStep) -> FocusTask | None:
         analysis = self.photos[p.photo_idx].analysis
         if p.step.action == StepAction.take_closer_photo:
@@ -182,14 +208,24 @@ class Session:
             return None
         analysis = self.photos[p.photo_idx].analysis
         zone = next((z for z in analysis.zones if z.id == p.step.zone_id), None)
-        items = self.step_items(PlannedStep(p.step, p.photo_idx, p.deps, p.status, smaller or p.smaller))
+        view = PlannedStep(p.step, p.photo_idx, p.deps, p.status, smaller or p.smaller)
+        items = self.step_items(view)
+        homes = {h.item_id: h for h in self.step_homes(view)}
         return {
             "action": p.step.action.value,
             "hazard": p.step.hazard,
+            "room": analysis.room.value,
+            "furniture": analysis.furniture,
             "zone": zone.label if zone else None,
             "zone_hazards": zone.hazards if zone else [],
-            "items": [{"label": i.label, "category": i.category.value, "count": len(i.instances)} for i in items],
-            "est_minutes": min(p.step.est_minutes, 2) if (smaller or p.smaller) else p.step.est_minutes,
+            "items": [
+                {"label": i.label, "category": i.category.value, "count": len(i.instances)}
+                | (homes[i.id].model_dump(include={"home", "fallback", "box_label", "tip"}) if i.id in homes else {})
+                for i in items
+            ],
+            "est_minutes": estimate_minutes(p.step.action, sum(max(1, len(i.instances)) for i in items))
+            if (smaller or p.smaller)
+            else p.step.est_minutes,
         }
 
     def coach_context(
@@ -201,20 +237,25 @@ class Session:
     ) -> dict:
         cur = self.current
         a = self.assessment
+        nxt = self.next_available(assume_done=cur.step.id) if cur else None
         return {
             "turn": turn,
+            # No level or severity: the person never hears a classification.
             "assessment": (
-                {"level": a.assigned_level, "severity": a.severity, "required_ppe": a.required_ppe,
+                {"suggest_professional": a.assigned_level >= 4, "gear": self.gear,
                  "observations": a.primary_justifications}
                 if a else None
             ),
             "safety_notes": self.safety_notes,
             "current_step": self.describe_step(cur),
-            "next_step_if_done": self.describe_step(self.next_available(assume_done=cur.step.id) if cur else None),
+            "next_step_if_done": self.describe_step(nxt),
             "alternative_if_skip": self.describe_step(self.next_available(exclude=cur.step.id) if cur else None),
             "smaller_version": self.describe_step(cur, smaller=True) if cur and not cur.smaller else None,
             "elapsed_min": round(self.elapsed_min, 1),
             "wrap_up": self.wrap_up,
+            "homes_set_up": self.homes_set_up(),
+            # A trash bag stays open across steps; tying it off only makes sense when the session ends.
+            "session_ending": self.wrap_up or cur is None or nxt is None,
             "recent_conversation": self.history[-HISTORY_TURNS:],
             "latest_message": latest_message,
             "forced_intent": forced_intent.value if forced_intent else None,
@@ -234,7 +275,7 @@ class Session:
             completed=sum(p.status == StepStatus.done for p in self.steps),
             remaining=sum(p.status in (StepStatus.pending, StepStatus.current) for p in self.steps),
             assessment=(
-                AssessmentSummary(level=a.assigned_level, severity=a.severity, required_ppe=a.required_ppe,
+                AssessmentSummary(level=a.assigned_level, severity=a.severity, required_ppe=self.gear,
                                   suggest_professional=a.assigned_level >= 4)
                 if a else None
             ),
@@ -244,6 +285,13 @@ class Session:
                     focus=self.step_focus(cur),
                     items=self.step_items(cur),
                     image_url=f"/sessions/{self.id}/steps/{cur.step.id}/focus.jpg",
+                    photo_index=cur.photo_idx,
+                    image_size=self.photos[cur.photo_idx].analysis.image_size,
+                    zone_label=next(
+                        (z.label for z in self.photos[cur.photo_idx].analysis.zones if z.id == cur.step.zone_id), None
+                    ),
+                    smaller=cur.smaller,
+                    homes=self.step_homes(cur),
                 )
                 if cur else None
             ),
@@ -278,6 +326,10 @@ class SessionStore:
                 return None
             self._sessions[sid] = (time.time(), entry[1])
             return entry[1]
+
+    def delete(self, sid: str) -> bool:
+        with self._lock:
+            return self._sessions.pop(sid, None) is not None
 
     def _evict(self) -> None:
         cutoff = time.time() - self._ttl

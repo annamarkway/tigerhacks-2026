@@ -35,6 +35,23 @@ CATEGORY_PRIORITY = {
 }
 
 
+class Room(str, Enum):
+    """Which room the photo shows, so a belonging's home can depend on it (a pillow goes on the couch
+    in the living room, on the bed in the bedroom)."""
+
+    living_room = "living_room"
+    bedroom = "bedroom"
+    kitchen = "kitchen"
+    dining_room = "dining_room"
+    bathroom = "bathroom"
+    office = "office"
+    entryway = "entryway"
+    laundry_room = "laundry_room"
+    garage = "garage"
+    closet = "closet"
+    other = "other"
+
+
 class Density(str, Enum):
     low = "low"
     medium = "medium"
@@ -99,6 +116,10 @@ class ZoomSuggestion(BaseModel):
 
 class SceneAnalysis(BaseModel):
     scene_summary: str
+    room: Room = Field(description="The room shown; 'other' when it isn't clear")
+    furniture: list[str] = Field(
+        description="Visible furniture things could go back onto or into, e.g. 'couch', 'armchair', 'bed', 'dresser'"
+    )
     complexity: Complexity
     zones: list[Zone]
     items: list[ItemGroup]
@@ -154,6 +175,8 @@ class FocusTask(BaseModel):
 class AnalysisResult(BaseModel):
     image_size: tuple[int, int]
     scene_summary: str
+    room: Room = Room.other
+    furniture: list[str] = []
     complexity: Complexity
     zones: list[ZoneResult]
     items: list[ItemResult]
@@ -189,9 +212,24 @@ class Assessment(BaseModel):
 class StepAction(str, Enum):
     bag = "bag"
     recycle = "recycle"
-    sort = "sort"  # usable belongings: keep, or let go into the let-go bag; the person decides
+    group = "group"  # usable belongings: like with like into one home (labeled box, drawer, room); no decisions
     set_aside = "set_aside"
     take_closer_photo = "take_closer_photo"
+
+    @classmethod
+    def _missing_(cls, value):
+        # Plans from before group replaced keep-or-let-go sorting.
+        return cls.group if value == "sort" else None
+
+
+class ItemHome(BaseModel):
+    """Where one kind of usable belonging goes (see prompts/homes.json)."""
+
+    kind: str
+    home: str
+    fallback: str = Field(description="If they don't have that box or drawer yet")
+    box_label: str | None = Field(default=None, description="What to write on the box with a marker")
+    tip: str | None = Field(default=None, description="One practical way to put this kind of thing away")
 
 
 class TriageStep(BaseModel):
@@ -199,12 +237,12 @@ class TriageStep(BaseModel):
     item_ids: list[str] = Field(description="1-4 nearby item group ids; empty for take_closer_photo")
     zone_id: str
     action: StepAction
-    est_minutes: int = Field(description="2-5")
+    est_minutes: int = Field(description="Rough guess, 1-5; the app recalculates it from how many pieces the step has")
     hazard: bool = Field(
         default=False,
         description=(
             "True when this step removes a safety hazard (food waste, sharps, spills, items blocking an exit or near heat); "
-            "for a sort step, the items must leave the path but the person still decides keep or let go"
+            "for a group step, the items only need to leave the path, into their home or one pile"
         ),
     )
     priority_reason: str
@@ -243,11 +281,21 @@ class SessionStatus(str, Enum):
     finished = "finished"
 
 
+class ItemHomeView(ItemHome):
+    item_id: str
+    label: str
+
+
 class StepView(BaseModel):
     step: TriageStep
     focus: FocusTask | None = Field(description="None for take_closer_photo")
     items: list[ItemResult]
     image_url: str | None
+    photo_index: int = Field(description="Which of the session's photos (in upload order) this step is on")
+    image_size: tuple[int, int] = Field(description="(width, height) of that photo; pixel coords are relative to it")
+    zone_label: str | None = None
+    smaller: bool = False
+    homes: list[ItemHomeView] = Field(default=[], description="Group steps: where each item goes")
 
 
 class AssessmentSummary(BaseModel):

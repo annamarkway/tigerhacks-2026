@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
@@ -7,6 +9,8 @@ const sharp = require('sharp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// FastAPI coach backend (backend/app/main.py). The PWA calls it through /backend.
+const BACKEND_URL = new URL(process.env.BACKEND_URL || 'http://127.0.0.1:8000');
 
 // ── Directories & Files ──
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -79,6 +83,32 @@ function guessExtension(mime) {
   };
   return map[mime] || '.bin';
 }
+
+// ── Coach backend proxy ──
+// Streams /backend/* to FastAPI unchanged (multipart photos included), so the phone
+// only needs this one origin. Registered before the body parsers so bodies stay intact.
+app.use('/backend', (req, res) => {
+  const client = BACKEND_URL.protocol === 'https:' ? https : http;
+  const upstream = client.request({
+    protocol: BACKEND_URL.protocol,
+    hostname: BACKEND_URL.hostname,
+    port: BACKEND_URL.port,
+    method: req.method,
+    path: req.url,
+    headers: { ...req.headers, host: BACKEND_URL.host },
+  }, (upRes) => {
+    res.writeHead(upRes.statusCode, upRes.headers);
+    upRes.pipe(res);
+  });
+  upstream.on('error', (err) => {
+    console.error(`  ⚠️  Coach backend unreachable at ${BACKEND_URL.origin}: ${err.code || err.message}`);
+    if (!res.headersSent) res.status(502).json({ detail: 'The coach service is not running.' });
+    else res.destroy();
+  });
+  // The person cancelled (or closed the app) before the reply came back.
+  res.on('close', () => { if (!res.writableFinished) upstream.destroy(); });
+  req.pipe(upstream);
+});
 
 // ── Middleware ──
 app.use(express.json({ limit: '50mb' }));
@@ -292,7 +322,7 @@ app.get('*', (req, res) => {
 
 // ── Start ──
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n  🗃️  Memory Vault is running!\n`);
+  console.log(`\n  🌱 Taskit is running!  (Memory Vault at /vault/)\n`);
   console.log(`  ➜  Local:   http://localhost:${PORT}`);
 
   const nets = require('os').networkInterfaces();
@@ -304,7 +334,8 @@ app.listen(PORT, '0.0.0.0', () => {
     }
   }
 
-  console.log(`\n  📁 Uploads:       ${UPLOADS_DIR}`);
+  console.log(`\n  🧠 Coach backend: ${BACKEND_URL.origin}  (proxied at /backend)`);
+  console.log(`  📁 Uploads:       ${UPLOADS_DIR}`);
   console.log(`  📄 Vault DB:      ${VAULT_FILE}`);
   console.log(`  🔑 Photo Registry: ${PHOTO_REGISTRY_FILE}\n`);
 });

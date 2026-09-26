@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from PIL import Image
@@ -30,16 +31,19 @@ def _analyze_photo(
     options: pipeline.Options | None,
     analysis: AnalysisResult | None = None,
     assess: bool = True,
+    cancel: threading.Event | None = None,
 ) -> tuple[Photo, Assessment | None]:
     """Vision pipeline and classifier run in parallel; a classifier failure isn't fatal.
 
     Pass a saved `analysis` to skip the vision call, and `assess=False` to skip the classifier.
     """
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        vision = pool.submit(pipeline.analyze, image, options) if analysis is None else None
+    pool = ThreadPoolExecutor(max_workers=2)
+    try:
+        vision = pool.submit(pipeline.analyze, image, options, cancel) if analysis is None else None
         assess_job = pool.submit(classify_mod.classify, image) if assess else None
         if vision is not None:
             analysis = vision.result()  # vision errors propagate (422 / 503 at the API)
+        pipeline.check_cancel(cancel)
         if assess_job is None:
             return Photo(image=image, analysis=analysis), None
         try:
@@ -47,7 +51,11 @@ def _analyze_photo(
         except Exception:
             log.exception("Assessment failed; continuing without it")
             assessment = None
-    return Photo(image=image, analysis=analysis), assessment
+        pipeline.check_cancel(cancel)
+        return Photo(image=image, analysis=analysis), assessment
+    finally:
+        # On an error or cancel, don't wait for the other call; its result is simply dropped.
+        pool.shutdown(wait=False, cancel_futures=True)
 
 
 def _fallback_reply(session: Session, text: str | None, forced: Intent | None) -> CoachReply:
@@ -71,16 +79,49 @@ SAFETY_HOLD = (
     "I hear you, and I know this part is hard. This piece is a safety step, so I'd like us to finish it before "
     "moving on. Let's make it as small as possible: just the highlighted items, straight into a trash bag."
 )
-SAFETY_HOLD_SORT = (
+SAFETY_HOLD_GROUP = (
     "I hear you, and I know this part is hard. These items need to come out of the path for your safety, so I'd "
-    "like us to finish this before moving on. Let's make it as small as possible: just the highlighted items. "
-    "You decide what to keep and what goes in the let-go bag."
+    "like us to finish this before moving on. Let's make it as small as possible: just the highlighted items, "
+    "moved into one pile out of the way. Nothing has to leave, and nothing needs deciding today."
 )
 
 
 def _safety_hold(session: Session) -> str:
     cur = session.current
-    return SAFETY_HOLD_SORT if cur and cur.step.action == StepAction.sort else SAFETY_HOLD
+    return SAFETY_HOLD_GROUP if cur and cur.step.action == StepAction.group else SAFETY_HOLD
+
+
+# Guards on the coach's wording, applied after every reply. The prompt asks for the same things;
+# these catch the times the model doesn't listen.
+_LEVEL_RE = re.compile(
+    r"\blevel\s*(?:[1-5]|one|two|three|four|five)\b|clutter[- ]?hoarding scale|\bICD\b|\bseverity\b|"
+    r"\b(?:green|blue|yellow|orange|red) (?:level|zone|category)\b",
+    re.IGNORECASE,
+)
+_TIE_OFF_RE = re.compile(
+    r"\btie (?:it|them|the bags?|that bag|this bag|your bags?)? ?(?:off|up|closed|shut)\b|"
+    r"\b(?:take|carry|bring) (?:the|that|this|your) (?:trash |let-go )?bags? (?:out|outside|to the)",
+    re.IGNORECASE,
+)
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def _drop_sentences(message: str, pattern: re.Pattern) -> str:
+    lines = []
+    for line in message.split("\n"):
+        kept = [sent for sent in _SENTENCE_RE.split(line) if not pattern.search(sent)]
+        if line.strip() and not kept:
+            continue  # the whole line went
+        lines.append(" ".join(kept))
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+
+
+def _clean(message: str, session: Session, intent: Intent | None) -> str:
+    message = _drop_sentences(message, _LEVEL_RE)
+    ending = intent in (Intent.pause, Intent.crisis) or session.coach_context("reply")["session_ending"]
+    if not ending:
+        message = _drop_sentences(message, _TIE_OFF_RE)
+    return message
 
 
 def _ask_coach(
@@ -98,15 +139,20 @@ def start_session(
     options: pipeline.Options | None = None,
     analysis: AnalysisResult | None = None,
     assess: bool = True,
+    cancel: threading.Event | None = None,
 ) -> SessionView:
-    photo, assessment = _analyze_photo(image, options, analysis, assess)
+    """`cancel` (set when the person cancels) stops the work at the next stage boundary; the
+    session is only stored once it's complete, so a cancel leaves no photo behind."""
+    photo, assessment = _analyze_photo(image, options, analysis, assess, cancel)
     steps, notes = triage.plan_steps(photo.analysis, assessment)
+    pipeline.check_cancel(cancel)
     session = Session(id=store.new_id(), photos=[], assessment=assessment, steps=[])
     session.add_plan(photo, steps, notes)
-    store.put(session)
 
     reply = _ask_coach(session, "opening", None, None)
-    message = reply.message or _template_message(session, None)
+    pipeline.check_cancel(cancel)
+    store.put(session)
+    message = _clean(reply.message, session, None) or _template_message(session, None)
     session.history.append({"role": "coach", "text": message})
     return session.view(message, None)
 
@@ -133,6 +179,7 @@ def handle_message(session: Session, text: str | None, action: Intent | None = N
         intent = Intent.crisis
 
     session.apply(intent)
+    message = _clean(message, session, intent) if message else message
     if intent == Intent.crisis:
         message = f"{message}\n\n{CRISIS_RESOURCES}".strip()
     else:
@@ -141,9 +188,17 @@ def handle_message(session: Session, text: str | None, action: Intent | None = N
     return session.view(message, intent)
 
 
-def add_photo(session: Session, image: Image.Image, options: pipeline.Options | None = None) -> SessionView:
-    """A closer photo, or a new area once the plan runs out: plan it and continue the same session."""
-    photo, assessment = _analyze_photo(image, options)
+def add_photo(
+    session: Session,
+    image: Image.Image,
+    options: pipeline.Options | None = None,
+    cancel: threading.Event | None = None,
+) -> SessionView:
+    """A closer photo, or a new area once the plan runs out: plan it and continue the same session.
+
+    `cancel` is honoured only before the session changes, so it never ends up half-updated.
+    """
+    photo, assessment = _analyze_photo(image, options, cancel=cancel)
     if assessment and (session.assessment is None or assessment.assigned_level > session.assessment.assigned_level):
         session.assessment = assessment  # keep the most cautious assessment
     session.complete_photo_step()
@@ -152,6 +207,6 @@ def add_photo(session: Session, image: Image.Image, options: pipeline.Options | 
 
     session.history.append({"role": "user", "text": "(sent a new photo)"})
     reply = _ask_coach(session, "new_photo", None, None)
-    message = reply.message or _template_message(session, None)
+    message = _clean(reply.message, session, None) or _template_message(session, None)
     session.history.append({"role": "coach", "text": message})
     return session.view(message, None)

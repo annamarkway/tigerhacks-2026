@@ -36,7 +36,8 @@ def test_mask_to_polygon():
 def _scene():
     box = VlmBox(x1=0, y1=0, x2=100, y2=100)
     return SceneAnalysis(
-        scene_summary="s", complexity=Complexity(score=2, too_complex=False, reason="r"),
+        scene_summary="s", room="living_room", furniture=["couch"],
+        complexity=Complexity(score=2, too_complex=False, reason="r"),
         zones=[Zone(id="z1", label="table", box=box, density=Density.medium, suggested_first=True,
                     accessible=True, blocked_by=[], blocks_path=False, hazards=[]),
                Zone(id="z2", label="floor", box=box, density=Density.high, suggested_first=False,

@@ -6,6 +6,7 @@ import io
 import logging
 import math
 import statistics
+import threading
 from dataclasses import dataclass
 
 from PIL import Image, ImageOps
@@ -34,6 +35,16 @@ class Options:
     use_segmenter: bool = True
     # Ground/segment items even when the scene is flagged too complex.
     refine_when_complex: bool = False
+
+
+class Cancelled(Exception):
+    """The person cancelled (the request's client went away). Raised at the next stage boundary."""
+
+
+def check_cancel(cancel: threading.Event | None) -> None:
+    # A model call already under way can't be interrupted; this stops the work that would follow it.
+    if cancel is not None and cancel.is_set():
+        raise Cancelled()
 
 
 def load_image(data: bytes | str) -> Image.Image:
@@ -152,9 +163,10 @@ def focus_from_result(result: AnalysisResult) -> FocusTask | None:
     )
 
 
-def analyze(image: Image.Image, options: Options | None = None) -> AnalysisResult:
+def analyze(image: Image.Image, options: Options | None = None, cancel: threading.Event | None = None) -> AnalysisResult:
     options = options or Options()
     w, h = image.size
+    check_cancel(cancel)
     scene, sent_size = vlm.analyze_scene(image)
     to_px = lambda b: scale_box(b, sent_size, (w, h))  # noqa: E731
 
@@ -164,6 +176,7 @@ def analyze(image: Image.Image, options: Options | None = None) -> AnalysisResul
 
     items: list[ItemResult] = []
     for group in scene.items:
+        check_cancel(cancel)
         vlm_boxes = [b for b in (to_px(nb) for nb in group.boxes) if area(b) > 0]
         instances: list[Instance] = []
         if refine and options.use_detector and vlm_boxes:
@@ -177,6 +190,7 @@ def analyze(image: Image.Image, options: Options | None = None) -> AnalysisResul
             ItemResult(id=group.id, zone_id=group.zone_id, label=group.label, category=group.category, instances=instances)
         )
 
+    check_cancel(cancel)
     if refine and options.use_segmenter:
         _attach_polygons(image, items)
 
@@ -192,6 +206,8 @@ def analyze(image: Image.Image, options: Options | None = None) -> AnalysisResul
     return AnalysisResult(
         image_size=(w, h),
         scene_summary=scene.scene_summary,
+        room=scene.room,
+        furniture=scene.furniture,
         complexity=scene.complexity,
         zones=[
             ZoneResult(
