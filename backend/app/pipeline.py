@@ -194,7 +194,10 @@ def analyze(image: Image.Image, options: Options | None = None) -> AnalysisResul
         scene_summary=scene.scene_summary,
         complexity=scene.complexity,
         zones=[
-            ZoneResult(id=z.id, label=z.label, bbox_px=zone_px[z.id], density=z.density, suggested_first=z.suggested_first)
+            ZoneResult(
+                id=z.id, label=z.label, bbox_px=zone_px[z.id], density=z.density, suggested_first=z.suggested_first,
+                accessible=z.accessible, blocked_by=z.blocked_by, blocks_path=z.blocks_path, hazards=z.hazards,
+            )
             for z in scene.zones
         ],
         items=items,
