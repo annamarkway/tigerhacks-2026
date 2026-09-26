@@ -1,0 +1,16 @@
+{
+  "name": "memory-vault",
+  "version": "1.0.0",
+  "description": "Digital Memory Vault — Capture memories of sentimental items before letting go",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "canvas": "^3.2.3",
+    "express": "^4.21.0",
+    "multer": "^2.4.0",
+    "sharp": "^0.35.4"
+  }
+}

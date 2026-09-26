@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- PWA meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Memory Vault" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0d0d12" />
+  <meta name="description" content="Capture memories of sentimental items before letting go — with photos and voice notes." />
+
+  <!-- PWA manifest & icons -->
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <title>Memory Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ───────── Landing / Hero ───────── -->
+  <section id="hero" class="screen active">
+    <div class="hero-bg"></div>
+    <div class="container hero-content">
+      <div class="logo">
+        <span class="logo-icon">🗃️</span>
+        <span class="logo-text">Memory Vault</span>
+      </div>
+      <h1>Treasure the Memory.<br />Release the Item.</h1>
+      <p class="subtitle">
+        Before you let go of something sentimental, capture its story forever —
+        with a photo or a voice note.
+      </p>
+      <button class="btn btn-primary btn-lg" onclick="navigateTo('add-item')">
+        <span class="btn-icon">＋</span> Capture a Memory
+      </button>
+      <button class="btn btn-outline btn-lg" onclick="navigateTo('vault')">
+        <span class="btn-icon">📂</span> Open My Vault
+      </button>
+    </div>
+  </section>
+
+  <!-- ───────── Add Item Screen ───────── -->
+  <section id="add-item" class="screen">
+    <nav class="topbar">
+      <button class="btn-back" onclick="navigateTo('hero')">← Back</button>
+      <h2>New Memory</h2>
+      <div class="spacer"></div>
+    </nav>
+
+    <div class="container add-item-content">
+      <!-- Item Name -->
+      <div class="form-group">
+        <label for="item-name">What are you letting go of?</label>
+        <input
+          type="text"
+          id="item-name"
+          placeholder='e.g. "Grandma's rocking chair"'
+        />
+      </div>
+
+      <!-- Item Story -->
+      <div class="form-group">
+        <label for="item-story">Tell its story (optional)</label>
+        <textarea
+          id="item-story"
+          rows="3"
+          placeholder="Why is this item special to you?"
+        ></textarea>
+      </div>
+
+      <!-- Capture Buttons -->
+      <div class="capture-section">
+        <h3>Capture the Memory</h3>
+        <p class="capture-hint">Choose one or more ways to preserve this moment.</p>
+
+        <div class="capture-grid">
+          <!-- Take Photo (camera) -->
+          <button class="capture-card" onclick="openCapture('photo')">
+            <div class="capture-icon">📷</div>
+            <span class="capture-label">Take a Photo</span>
+            <span class="capture-sub">Open camera to snap a pic</span>
+          </button>
+
+          <!-- Upload Photo (gallery) -->
+          <button class="capture-card" onclick="triggerFileUpload('photo-upload')">
+            <div class="capture-icon">🖼️</div>
+            <span class="capture-label">Upload Photo</span>
+            <span class="capture-sub">Choose from your gallery</span>
+          </button>
+
+          <!-- Voice Note -->
+          <button class="capture-card" onclick="openCapture('voice')">
+            <div class="capture-icon">🎙️</div>
+            <span class="capture-label">Voice Note</span>
+            <span class="capture-sub">Record what this means to you</span>
+          </button>
+        </div>
+
+        <!-- Hidden native file input (iOS/Android friendly) -->
+        <input type="file" id="photo-upload" accept="image/*" class="hidden-file-input" onchange="handleFileUpload(this, 'photo')" />
+
+        <!-- Attached media preview strip -->
+        <div id="attached-media" class="attached-media hidden">
+          <h4>Attached Memories</h4>
+          <div id="media-preview-list" class="media-preview-list"></div>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <button id="btn-save" class="btn btn-primary btn-lg btn-full" onclick="saveMemory()">
+        💾 Save to Vault
+      </button>
+    </div>
+  </section>
+
+  <!-- ───────── Capture Modal (Photo / Voice) ───────── -->
+  <div id="capture-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="closeCapture()"></div>
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeCapture()">✕</button>
+
+      <h3 id="capture-modal-title">Capture</h3>
+
+      <!-- Fallback message for unsupported browsers -->
+      <div id="capture-fallback" class="capture-fallback hidden">
+        <p>Your browser doesn't support live camera access.</p>
+        <p>Use the <strong>Upload Photo</strong> button instead to pick from your gallery.</p>
+        <button class="btn btn-primary" onclick="closeCapture()">OK</button>
+      </div>
+
+      <!-- Camera / Mic Preview -->
+      <div id="capture-live" class="capture-live">
+        <div class="preview-wrapper">
+          <video id="camera-preview" autoplay playsinline muted></video>
+          <!-- Voice-only visualizer -->
+          <canvas id="voice-visualizer" class="hidden"></canvas>
+          <div id="capture-timer" class="capture-timer hidden">00:00</div>
+        </div>
+
+        <div class="modal-actions">
+          <!-- Photo mode -->
+          <button id="btn-snap" class="btn btn-capture hidden" onclick="snapPhoto()">
+            📸 Snap Photo
+          </button>
+
+          <!-- Voice mode -->
+          <button id="btn-record-voice" class="btn btn-capture hidden" onclick="toggleVoiceRecording()">
+            🎙️ Start Recording
+          </button>
+
+          <button id="btn-use-capture" class="btn btn-primary hidden" onclick="useCapture()">
+            ✅ Use This
+          </button>
+          <button id="btn-retake" class="btn btn-outline hidden" onclick="retake()">
+            🔄 Retake
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden canvas for snapshots -->
+      <canvas id="snap-canvas" class="hidden"></canvas>
+    </div>
+  </div>
+
+  <!-- ───────── Vault Screen ───────── -->
+  <section id="vault" class="screen">
+    <nav class="topbar">
+      <button class="btn-back" onclick="navigateTo('hero')">← Home</button>
+      <h2>My Memory Vault</h2>
+      <div class="spacer"></div>
+    </nav>
+
+    <div class="container vault-content">
+      <div id="vault-empty" class="vault-empty">
+        <div class="vault-empty-icon">🗃️</div>
+        <p>Your vault is empty.</p>
+        <p class="vault-empty-sub">Capture a memory before letting go of something special.</p>
+        <button class="btn btn-primary" onclick="navigateTo('add-item')">
+          ＋ Capture a Memory
+        </button>
+      </div>
+
+      <div id="vault-grid" class="vault-grid hidden"></div>
+    </div>
+  </section>
+
+  <!-- ───────── Memory Detail Modal ───────── -->
+  <div id="detail-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="closeDetail()"></div>
+    <div class="modal-content modal-detail">
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+
+  <!-- ───────── Toast ───────── -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ───────── Loading Overlay ───────── -->
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+    <p>Saving to vault…</p>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
