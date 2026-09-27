@@ -181,7 +181,7 @@
     },
     {
       "kind": "books",
-      "keywords": ["book", "textbook", "novel", "cookbook", "magazine", "comic", "notebook", "journal", "sketchbook"],
+      "keywords": ["book", "textbook", "novel", "cookbook", "magazine", "comic", "notebook", "journal", "sketchbook", "binder"],
       "home": "a bookshelf, or a box labeled 'Books'",
       "fallback": "one neat stack against the wall, spines facing out",
       "box_label": "Books",
