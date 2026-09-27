@@ -11,7 +11,7 @@ import numpy as np
 from PIL import Image
 
 from .geometry import Box
-from .grounding import device
+from .grounding import GPU_LOCK, device
 
 WEIGHTS = os.environ.get(
     "HOARD_SAM_WEIGHTS", str(Path(__file__).resolve().parent.parent / "models" / "sam2.1_b.pt")
@@ -43,13 +43,14 @@ def segment_boxes(image: Image.Image, boxes: list[Box]) -> list[np.ndarray]:
     """One boolean HxW mask per box, in the same order."""
     if not boxes:
         return []
-    model = _load()
     arr = np.asarray(image.convert("RGB"))[:, :, ::-1]  # ultralytics expects BGR ndarray
-    results = model(arr, bboxes=[list(b) for b in boxes], device=device(), verbose=False)
-    masks = results[0].masks
-    if masks is None:
+    with GPU_LOCK:
+        model = _load()
+        results = model(arr, bboxes=[list(b) for b in boxes], device=device(), verbose=False)
+        masks = results[0].masks
+        data = masks.data.cpu().numpy() > 0.5 if masks is not None else None
+    if data is None:
         return [np.zeros(arr.shape[:2], dtype=bool) for _ in boxes]
-    data = masks.data.cpu().numpy() > 0.5
     if data.shape[1:] != arr.shape[:2]:
         data = np.stack(
             [cv2.resize(m.astype(np.uint8), (arr.shape[1], arr.shape[0]), interpolation=cv2.INTER_NEAREST) > 0 for m in data]
